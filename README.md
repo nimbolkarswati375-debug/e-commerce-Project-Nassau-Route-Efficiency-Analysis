@@ -84,7 +84,7 @@ Interactive Streamlit Dashboard
 
 ### Development Tools
 - Visual Studio Code
-- Git
+- streamlit
 - GitHub
 
 ---

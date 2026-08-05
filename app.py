@@ -88,45 +88,81 @@ def load_data():
 
     # Convert dates
     df["Order Date"] = pd.to_datetime(
-        df["Order Date"],
-        format="%d-%m-%Y",
-        errors="coerce"
-    )
+    df["Order Date"],
+    format="%Y-%m-%d",
+    errors="coerce"
+)
 
     df["Ship Date"] = pd.to_datetime(
-        df["Ship Date"],
-        format="%d-%m-%Y",
-        errors="coerce"
-    )
+    df["Ship Date"],
+    format="%Y-%m-%d",
+    errors="coerce"
+)
+
+    # ----------------------------------------------------
+    # Validate Date Conversion
+    # ----------------------------------------------------
+
+    if df["Order Date"].isna().all() or df["Ship Date"].isna().all(): 
+       st.error("Date conversion failed. Please check the date format in the CSV.")
+       st.stop() 
 
     # Remove invalid dates
     df = df.dropna(subset=["Order Date", "Ship Date"])
 
-    # Calculate Lead Time
-    df["Lead Time"] = (
-        df["Ship Date"] - df["Order Date"]
+    # Keep the original lead time for reference
+    df["Original_Lead_Time"] = (
+    df["Ship Date"] - df["Order Date"]
     ).dt.days
 
-    # Remove negative Lead Time
+    # Keep the cleaned operational lead time
+    df["Lead Time"] = pd.to_numeric(
+    df["Lead Time"],
+    errors="coerce"
+)
+    # ----------------------------------------------------
+    # Remove Negative Lead Time
+    # ----------------------------------------------------
+
     df = df[df["Lead Time"] >= 0]
 
-    # Fill missing numeric values
-    df["Cost"] = df["Cost"].fillna(df["Cost"].median())
-    df["Gross Profit"] = df["Gross Profit"].fillna(df["Gross Profit"].median())
+    # ----------------------------------------------------
+    # Fill Missing Numeric Values
+    # ----------------------------------------------------
 
-    # Fill missing categorical values
-    for col in [
+    numeric_columns = [
+        "Cost",
+        "Gross Profit"
+    ]
+
+    for col in numeric_columns:
+        df[col] = df[col].fillna(df[col].median())
+
+    # ----------------------------------------------------
+    # Fill Missing Categorical Values
+    # ----------------------------------------------------
+
+    categorical_columns = [
         "Factory",
         "Region",
         "Ship Mode",
         "State/Province",
         "Route_State",
         "Route_Region"
-    ]:
+    ]
+
+    for col in categorical_columns:
         df[col] = df[col].fillna("Unknown")
 
-    # Remove duplicates
+    # ----------------------------------------------------
+    # Remove Duplicate Records
+    # ----------------------------------------------------
+
     df = df.drop_duplicates()
+
+    # ----------------------------------------------------
+    # Return Cleaned Dataset
+    # ----------------------------------------------------
 
     return df
         # ----------------------------------------------------
